@@ -1,0 +1,37 @@
+<style>
+    .single-card .icon {
+        width: 150px;
+        height: 150px;
+        vertical-align: middle;
+        fill: currentColor;
+    }
+
+    .single-icon-card .single-card-image {
+        padding: 25px;
+    }
+</style>
+
+<div class="single-card single-icon-card"
+        {% if key_acquisition_url %}
+            onclick="location.href='{{ key_acquisition_url }}';"
+        {% endif %}
+>
+    <div class="single-col single-col-l single-col-1 single-card-image">
+        {% render 'single-icon-padlock' %}
+    </div>
+    <div class="single-col single-col-r single-col-1 single-card-info">
+        {% if denial_reason == 'NO_KEY_FOUND' %}
+            <h3 class="single-album-title">{{ count }} More Item(s) Available</h3>
+            <p class="single-album-artist single-card-description">You don't currently have access to these items.</p>
+            <button class="btn button" onclick="location.href='{{ key_acquisition_url }}';">Buy Access Now</button>
+        {% elsif denial_reason == 'INSUFFICIENT_USES_AVAILABLE' %}
+            <h3 class="single-album-title">{{ count }} More Item(s) Available</h3>
+            <p class="single-album-artist single-card-description">You'll need to purchase additional access in order to see the rest.</p>
+            <button class="btn button" onclick="location.href='{{ key_acquisition_url }}';">Buy Access Now</button>
+        {% else %}
+            <h3 class="single-album-title">Unlock more by logging in</h3>
+            <p class="single-album-artist single-card-description">{{ count }} More Item(s) Available</p>
+            {% section 'single-gated-login-button' %}
+        {% endif %}
+    </div>
+</div>

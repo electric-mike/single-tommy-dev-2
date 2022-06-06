@@ -1,0 +1,137 @@
+{% comment %}
+<!--
+Copyright (c) 2022 Single, LLC - ALL RIGHTS RESERVED
+
+NOTICE:  All information contained herein is, and remains the property of Single, LLC
+and its suppliers, if any. The intellectual and technical concepts contained herein are
+proprietary to Single, LLC and its suppliers and may be covered by U.S. and Foreign Patents,
+patents in process, and are protected by trade secret or copyright law. Dissemination of this
+information or reproduction of this material is strictly forbidden unless prior
+written permission is obtained from Single, LLC.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+{% endcomment %}
+
+{% comment %}
+<!-- Single Default Styles - Can be edited in assets/single-v3.scss.liquid -->
+{% endcomment %}
+{{ 'single-v4.css' | asset_url | stylesheet_tag }}
+
+{% comment %}
+<!-- jQuery -->
+{% endcomment %}
+{{ '//ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js' | script_tag }}
+
+<style>
+    .single-variant-select {
+        font-size: 1.6rem;
+    }
+
+    .single-variant-select-section {
+        margin-bottom: 1em;
+    }
+</style>
+
+{% assign product = shop.metafields.single_gated_content[gated_product_id].value %}
+{% assign featured_image = product.images.first.src | image_url: '600x' %}
+
+<div class="single-grid {{ theme.name | handleize }}" itemscope itemtype="http://schema.org/Product">
+    <div class="single-grid-item">
+        <!-- Product Metatags -->
+        <meta itemprop="url" content="{{ shop.url }}{{ product.url }}"/>
+        <meta itemprop="image" content="{{ featured_image }}"/>
+        <meta property="og:title" content="{{ product.title }}"/>
+        <meta property="og:image" content="{{ featured_image }}"/>
+        <meta property="og:url" content="{{ shop.url }}{{ product.url }}"/>
+        <!-- Left Column-->
+        <div class="single-col single-col-l single-col-4">
+            <div class="single-album-art">
+                <img src="{{ featured_image }}" alt="{{ featured_img_alt }}"/>
+            </div>
+        </div>
+
+        <!--End Left Column-->
+        <!--Right Column-->
+        <div class="single-col single-col-r single-col-8">
+            <!-- Begin Single Header -->
+            <div class="single-album-header">
+                <h1 class="single-album-title" itemprop="name">
+                    <span>{{ product.title }}</span>
+                </h1>
+                <p class="single-album-artist">{{ product.description }}</p>
+                <meta itemprop="priceCurrency" content="{{ shop.currency }}">
+                {% render 'single-progress-bar', product: product %}
+                <!-- Add to Cart -->
+                <single-product-form>
+                    {% if product.variants.size > 1 %}
+                        <div class="product-form__input">
+                            <div class="select single-variant-select-section">
+                                <select name="id" class="select__select single-variant-select">
+                                    {% for variant in product.variants %}
+                                        {% if variant.available %}
+                                            <option value="{{variant.id}}"> {{ variant.title }} - {{ variant.price | money }}</option>
+                                        {% else %}
+                                            <option disabled="disabled"> {{ variant.title }} - Sold out</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                {% render 'single-icon-caret' %}
+                            </div>
+                        </div>
+                    {% else %}
+                        {% assign variant = product.variants.first %}
+                        <div class="single-album-title">{{ variant.title }} - {{ variant.price | money }}</div>
+                        <input name="id" value="{{ variant.id }}" type="hidden" />
+                    {% endif %}
+                    {% if product.available != true %}
+                        <div class="single-album-title">Sold Out</div>
+                    {% elsif access_response == "REQUEST_LOGIN" %}
+                        {% section 'single-gated-login-button' %}
+                    {% elsif access_response == "ACCESS_DENIED" %}
+                        <div class="single-album-title">You do not have access to this product. You may purchase access below.</div>
+                    {% elsif product.available %}
+                        <div class="single-album-add-to-cart">
+                            <button type="submit" name="add" id="AddToCart" class="btn button">
+                                <span id="AddToCartText">Buy it now</span>
+                            </button>
+                        </div>
+                    {% endif %}
+                </single-product-form>
+            </div>
+            <!-- End Single Header -->
+        </div>
+        <!-- End Right Column -->
+    </div>
+    <!-- End Inner Wrap -->
+</div>
+<!-- End Product Wrap -->
+
+{% if product_ids.size > 0 %}
+    <div class="single-grid {{ theme.name | handleize }}">
+        <h1 class="single-album-title">
+            <span>Grants access to the following:</span>
+        </h1>
+        {% for product_id in product_ids %}
+            {% render 'single-product-card', product_id: product_id %}
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if key_product_ids.size > 0 %}
+    <div class="single-grid {{ theme.name | handleize }}">
+        <h1 class="single-album-title">
+            <span>Need Access?</span>
+        </h1>
+        {% for product_id in key_product_ids %}
+            {% assign product_id_parts = product_id | split: "|" %}
+            {% render 'single-product-card', product_id: product_id_parts[0], required_amount: product_id_parts[1] %}
+        {% endfor %}
+    </div>
+{% endif %}

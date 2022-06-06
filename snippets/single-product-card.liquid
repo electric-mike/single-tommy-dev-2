@@ -1,0 +1,36 @@
+{% if all_products[product_id] != blank %}
+    {% assign product = all_products[product_id] %}
+{% else %}
+    {% assign product = shop.metafields.single_gated_content[product_id].value %}
+{% endif %}
+<div class="single-card" onclick="location.href='{{ product.url }}';">
+    <div class="single-col single-col-l single-col-1 single-card-image">
+        {% render 'single-image', image: product.images.first %}
+    </div>
+    <div class="single-col single-col-r single-col-1 single-card-info">
+        <h3 class="single-album-title">{{ product.title }}</h3>
+        <p class="single-album-artist single-card-description">{{ product.description }}</p>
+        {% if product.available %}
+            <div class="card__badge">
+              <span class="badge badge--bottom-left color-{{ settings.sold_out_badge_color_scheme }}">
+                {% if product.price == 0 %}
+                    FREE
+                {% elsif settings.currency_code_enabled %}
+                    {{ product.price | money_with_currency }}
+                {% else %}
+                    {{ product.price | money }}
+                {% endif %}
+              </span>
+            </div>
+        {% else %}
+            <div class="card__badge">
+                <span class="badge badge--bottom-left color-{{ settings.sold_out_badge_color_scheme }}">{{ 'products.product.sold_out' | t }}</span>
+            </div>
+        {% endif %}
+        {% if required_amount and required_amount != "0" %}
+            <div class="card__badge">
+                <span class="badge badge--bottom-left color-{{ settings.sold_out_badge_color_scheme }}">{{ required_amount }} needed</span>
+            </div>
+        {% endif %}
+    </div>
+</div>

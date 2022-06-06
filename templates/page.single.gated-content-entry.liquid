@@ -1,0 +1,7 @@
+<script type="text/javascript">
+    let params = (new URL(document.location)).searchParams;
+    let content_id = params.get("content-id");
+    window.SINGLE_CONTENT_KEY=content_id;
+</script>
+{% section 'single-gated-common' %}
+<single-content-gating></single-content-gating>

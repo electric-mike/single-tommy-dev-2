@@ -1,0 +1,38 @@
+<style>
+    .single-gate {
+        margin: 4em 0;
+        text-align: center;
+        margin-bottom: 4em;
+        display: none;
+    }
+
+    .button {
+        margin: 0 auto;
+    }
+</style>
+
+<!-- Anonymous -->
+<section class="single-gate single-gate-login" hidden>
+    <button class="single-login-button btn button">{{ 'single.login.connect_wallet' | t }}</button>
+</section>
+
+<!-- Waiting For Approval -->
+<section class="single-gate single-gate-waiting" hidden>
+    <button class="btn button"><single-spinner size="small"></single-spinner>{{ 'single.login.approve' |  t }}</button>
+</section>
+
+
+{% schema %}
+{
+    "locales": {
+        "en": {
+            "single": {
+                "login":{
+                    "connect_wallet": "Connect Wallet",
+                    "approve": "Waiting for signature approval..."
+                }
+            }
+        }
+    }
+}
+{% endschema %}

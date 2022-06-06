@@ -1,0 +1,19 @@
+{% if all_products[product_id] != blank %}
+    {% assign product = all_products[product_id] %}
+{% else %}
+    {% assign product = shop.metafields.single_gated_content[product_id].value %}
+{% endif %}
+{% assign page = pages[page_id] %}
+{% assign event_date = page.metafields.single_livestream.event_date | date: "%s" %}
+<div class="single-card"
+     onclick="location.href='{{ page.url }}';">
+    <div class="single-col single-col-l single-col-1 single-card-image">
+        {% render 'single-image', image: product.images.first %}
+    </div>
+    <div class="single-col single-col-r single-col-1 single-card-info">
+        <h3 class="single-album-title">{{ product.title }}</h3>
+        <p class="single-album-artist single-card-description">
+            {{ event_date | date: format: "date_at_time" }} {{ event_date | date: "%Z" }}
+        </p>
+    </div>
+</div>

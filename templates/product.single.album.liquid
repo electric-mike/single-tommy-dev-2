@@ -1,0 +1,298 @@
+{% comment %}
+<!--
+Copyright (c) 2021 Single, LLC - ALL RIGHTS RESERVED 
+
+NOTICE:  All information contained herein is, and remains the property of Single, LLC 
+and its suppliers, if any. The intellectual and technical concepts contained herein are 
+proprietary to Single, LLC and its suppliers and may be covered by U.S. and Foreign Patents, 
+patents in process, and are protected by trade secret or copyright law. Dissemination of this 
+information or reproduction of this material is strictly forbidden unless prior 
+written permission is obtained from Single, LLC.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+{% endcomment %}
+
+{% comment %}
+<!-- Single Default Styles - Can be edited in assets/single-v2.scss.liquid -->
+{% endcomment %}
+{{ 'single-v4.css' | asset_url | stylesheet_tag }}
+
+{% comment %}
+<!-- jQuery -->
+{% endcomment %}
+{{ '//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js' | script_tag }}
+
+{% comment %}
+<!-- Release Date Logic for Presale products -->
+{% endcomment %}
+{% capture releaseDateString %}{{ product.metafields.album.release_date }}{% endcapture %}
+{% assign dateParts = releaseDateString | split: "/" %}
+{% capture releaseDateFormatted %}{{ dateParts[2] }}-{{ dateParts[0] }}-{{ dateParts[1] }}{% endcapture %}
+{% assign releaseDate = releaseDateFormatted | date: "%s" | plus: 0 %}
+{% assign now = "now" | date: "%s" | plus: 0 %}
+{% capture presale %}{% if releaseDate > now %}true{% endif %}{% endcapture %}
+
+<div class="single-grid {{ theme.name | handleize }}"
+     itemscope
+     itemtype="http://schema.org/Product">
+  <div class="single-grid-item">
+    <!-- Product Metatags -->
+    <meta itemprop="url" content="{{ shop.url }}{{ product.url }}">
+    <meta itemprop="image" content="{{ product.featured_image.src | img_url: 'grande' }}">
+    <meta property="og:title" content="{{ product.title }}"/>
+    <meta property="og:image" content="{{ product.featured_image.src | img_url: 'grande' }}"/>
+    <meta property="og:url" content="{{ shop.url }}{{ product.url }}"/>
+    <!-- Left Column-->
+    <div class="single-col single-col-l single-col-4">
+      <div class="single-album-art">
+        <img src="{{ product.featured_image.src | img_url: 'grande' }}"
+             alt="{{ featured_img_alt }}">
+      </div>
+      {% if product.metafields.album.track_count > 1 %}
+      {% unless product.metafields.album.confidential_release_date == "true" %}
+      {% if presale == "true" %}
+      <div class="single-album-release-date">Pre-order: Expected {{ releaseDateFormatted | time_tag: '%B %d, %Y' }}</div>
+      <div class="single-presale-note">Pre-order contents may change without notice. You'll receive items from this pre-order as they become available.</div>
+      {% else %}
+      <div class="single-album-release-date">
+        <p>Release Date: {{ releaseDateFormatted | time_tag: '%B %d, %Y' }}</p>
+      </div>
+      {% endif %}
+      {% endunless %}
+      <div class="single-album-description desktop-desc"
+           itemprop="description">
+        <p>Downloads include choice of MP3, WAV, or FLAC</p>
+        <p>{{ product.description }}</p>
+      </div>
+      {% endif %}
+    </div>
+    <!--End Left Column-->
+    <!--Right Column-->
+    <div class="single-col single-col-r single-col-8">
+      <!-- Begin Single Header -->
+      <div class="single-album-header">
+        <h1 class="single-album-title"
+            itemprop="name">
+          {% if product.metafields.album.featured_artist_names %}
+          <span>{{ product.title }} (feat. {{product.metafields.album.featured_artist_names}})</span>
+          {% else %}
+          <span>{{ product.title }}</span>
+          {% endif %}
+        </h1>
+        <p class="single-album-artist">{{ product.metafields.album.artist_name }}</p>
+        {% if product.variants.size == 1 %}
+        <h3 class="single-album-price">
+          {% if product.metafields.album.track_count == 1 and trackOnSale == "true" %}
+          {% assign collection_key = product.metafields.album.collection_handle %}
+          {% assign track = collections[collection_key].products.first %}
+          {% capture trackTime %}{% if track.metafields.track.track_time != '' %}<span class="single-track-preview-timer">{{track.metafields.track.track_time}}</span>{% endif %}{% endcapture %}
+          {% capture previewAvailable %}{% if track.metafields.track.preview == "true" %}true{% endif %}{% endcapture %}
+          {% assign previewLink = track.metafields.track.preview_link %}
+          {% if previewAvailable == "true" %}
+          <span class="single-album-track-play"
+                onclick="togglePlayingSingleTrack('{{ track.id }}', '{{ previewLink }}')">
+            <i class="material-icons">play_circle_outline</i>
+          </span>
+          {% endif %}
+          {% endif %}
+          <span>{{ product.variants.first.price | money }}</span>
+          <span class="single-track-time">{{trackTime}}</span>
+        </h3>
+        {% endif %}
+        <meta itemprop="priceCurrency" content="{{ shop.currency }}">
+        <!-- Add to Cart -->
+        {% form 'product', product %}
+        {% if product.variants.size > 1 %}
+        <div class="single-field-label">Select Format</div>
+        <select name="id"
+                class="single-select-field">
+          {% for variant in product.variants %}
+          {% if variant.available == true %}
+          <option value="{{variant.id}}"> {{ variant.title }} - {{ variant.price | money }}</option>
+          {% else %}
+          <option disabled="disabled"> {{ variant.title }} - sold out!</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+        {% else %}
+        <input name="id"
+               value="{{ product.variants.first.id }}"
+               type="hidden" />
+        {% endif %}
+        <div class="single-album-add-to-cart">
+          <button type="submit"
+                  name="add"
+                  id="AddToCart"
+                  class="btn btn--secondary-accent button button--secondary">
+            <span id="AddToCartText">Add{% if presale == "true" %} Pre-order{% endif %} to Cart</span>
+          </button>
+          {{ form | payment_button }}
+        </div>
+        {% endform %}
+      </div>
+      <!-- End Single Header -->
+      <!-- Begin Tracklist -->
+      {% assign collection_key = product.metafields.album.collection_handle %}
+      {% assign products = collections[collection_key].products %}
+      {% capture productsExist %}{% if products != '' and products.length != 0 %}true{% endif %}{% endcapture %}
+      {% if product.metafields.album.track_count != 1 and productsExist == 'true' %}
+      <div id="playlist"
+           class="single-tracklist">
+        {% for track in products %}
+        {% if track.type == 'Digital Track' %}
+        {% include 'single-track' with track %}
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      <!-- End Tracklist -->
+      <!-- Single Track Info-->
+      {% if product.metafields.album.track_count == 1 %}
+      {% unless product.metafields.album.confidential_release_date == "true" %}
+      {% if presale == "true" %}
+      <div class="single-album-release-date">Pre-order: Expected {{ releaseDateFormatted | time_tag: '%B %d, %Y' }}</div>
+      <div class="single-presale-note">Pre-order contents may change without notice. You'll receive items from this pre-order as they become available.</div>
+      {% else %}
+      <div class="single-album-release-date">
+        <p>Release Date: {{ releaseDateFormatted | time_tag: '%B %d, %Y' }}</p>
+      </div>
+      {% endif %}
+      {% endunless %}
+      <div class="single-album-description desktop-desc"
+           itemprop="description">
+        <p>Downloads include choice of MP3, WAV, or FLAC</p>
+        <p>{{ product.description }}</p>
+      </div>
+      {% endif %}
+      <!-- Mobile Description -->
+      <div class="single-album-description mobile-desc"
+           itemprop="description">
+        <p>Downloads include choice of MP3, WAV, or FLAC</p>
+        <p>{{ product.description }}</p>
+      </div>
+    </div>
+    <!-- End Right Column -->
+  </div>
+  <!-- End Inner Wrap -->
+</div>
+<!-- End Product Wrap -->
+
+{% include 'single-footer-player' %}
+
+<script src="https://unpkg.com/wavesurfer.js"></script>
+
+<script>
+
+  // Create a WaveSurfer instance
+  var wavesurfer;
+
+  // Init on DOM ready
+  document.addEventListener('DOMContentLoaded', function () {
+    wavesurfer = WaveSurfer.create({
+      container: '#waveform',
+      waveColor: 'rgba(255,255,255,.25)',
+      progressColor: 'white',
+      height: '60',
+      barHeight: '3',
+      barWidth: '3',
+      barRadius: 3,
+      cursorWidth: 1,
+      mediaControls: 'true',
+      responsive: true
+    });
+  });
+
+  // Bind controls
+  document.addEventListener('DOMContentLoaded', function () {
+    let playPause = document.querySelector('#playPause');
+    playPause.addEventListener('click', function () {
+      wavesurfer.playPause();
+    });
+
+    // Toggle play/pause text
+    wavesurfer.on('play', function () {
+      document.querySelector('#play').style.display = 'none';
+      document.querySelector('#pause').style.display = '';
+    });
+    wavesurfer.on('pause', function () {
+      document.querySelector('#play').style.display = 'block';
+      document.querySelector('#pause').style.display = 'none';
+    });
+
+    // The playlist links
+    let links = document.querySelectorAll('#playlist a');
+    let currentTrack = 0;
+
+    // Load a track by index and highlight the corresponding link
+    let setCurrentSong = function (index) {
+      links[currentTrack].classList.remove('active');
+      currentTrack = index;
+      links[currentTrack].classList.add('active');
+      wavesurfer.load(links[currentTrack].href);
+    };
+
+    // Load the track on click
+    Array.prototype.forEach.call(links, function (link, index) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        setCurrentSong(index);
+      });
+    });
+
+    // Play on audio load
+    wavesurfer.on('ready', function () {
+      wavesurfer.play();
+    });
+
+    wavesurfer.on('error', function (e) {
+      console.warn(e);
+    });
+
+    // Go to the next track on finish
+    wavesurfer.on('finish', function () {
+      setCurrentSong((currentTrack + 1) % links.length);
+    });
+
+    // Load the first track
+    setCurrentSong(currentTrack);
+  });
+</script>
+
+<!-- Single AJAX Scripts -->
+<script>
+  {% comment %}
+  /*
+  This adds the provided track variant to the shopping cart,
+  fetches the cart, and updates the cart item count.
+  */
+  {% endcomment %}
+  addTrackToCart = function addTrackToCart(variantId, trackId) {
+    $.post('/cart/add.json', { quantity: 1, id: variantId },
+      function (variant) {
+        var elem = $('#single-add-track-to-cart-icon-' + trackId);
+        elem.replaceWith('<a href="/cart"><i class="material-icons animated pulse">check_circle</i></a>');
+        $.get('/cart.json', function (cart) {
+          var cartElem = $($('span.cart-count')[0]);
+          if (!cartElem) {
+            return;
+          }
+          cartElem.text(cart.item_count);
+          cartElem.removeClass('__web-inspector-hide-shortcut__');
+          cartElem.removeClass('hidden-count');
+          cartElem.prev().removeClass('hidden-count');
+        });
+      }).fail(function () {
+        {% comment %} // This happens if track fails to add. --> {% endcomment %}
+        alert('Failed to add track to cart!');
+      });
+  };
+</script>
+
+{% include 'single-ajaxify-album' %}

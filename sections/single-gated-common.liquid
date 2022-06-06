@@ -1,0 +1,46 @@
+<style>
+  .single-gate {
+    margin: 4em 0;
+    text-align: center;
+    margin-bottom: 4em;
+    display: none;
+  }
+
+  .single-gate-logout {
+      margin: 1em;
+      text-align: right;
+  }
+
+  .single-logout-button {
+      margin-right: 1em;
+  }
+
+  .button {
+    margin: 0 auto;
+  }
+</style>
+
+<!-- Wallet Connected - Logout -->
+<section class="single-gate single-gate-logout" hidden>
+  <button class="single-logout-button btn button">{{ 'single.login.log_out' | t }}</button>
+</section>
+
+<!-- Loading -->
+<section class="single-gate single-gate-loading" hidden>
+  <single-spinner></single-spinner>
+</section>
+
+
+{% schema %}
+  {
+    "locales": {
+      "en": {
+        "single": {
+          "login":{
+            "log_out": "Log Out"
+          }
+        }
+      }
+    }
+  }
+{% endschema %}
