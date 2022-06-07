@@ -90,6 +90,12 @@
     cursor: pointer;
   }
 
+  .player-controls .prev, 
+  .player-controls .next,
+  .single-track-add-to-cart {
+    cursor: pointer;
+  }
+
   @media screen and (max-width: 640px) {
     body {
       padding-bottom: 150px;
@@ -144,9 +150,9 @@
         <span class="remaining">/ 00:00</span>
       </div>
       <div class="track-meta">
-        <span>C#</span>
+        <span class="track-tuning">C#</span>
         <span style="opacity: .25;">•</span>
-        <span>126bpm</span>
+        <span class="track-bpm">126bpm</span>
       </div>
     </div>
 
@@ -168,8 +174,7 @@
     <div class="track-purchase">
       <div class="single-track-add-to-cart">
         <div class="single-track-btn">
-          <i class="material-icons"
-             id="single-add-track-to-cart-icon-{{track.id}}">add_shopping_cart</i>
+          <i class="material-icons">add_shopping_cart</i>
           <span>$0.99</span>
         </div>
       </div>
