@@ -392,14 +392,13 @@ SOFTWARE.
         });
 
         $.get('/cart.json', function (cart) {
-          var cartElem = $($('span.cart-count')[0]);
+          var cartElem = $('.cart-count-bubble');
           if (!cartElem) {
             return;
           }
-          cartElem.text(cart.item_count);
-          cartElem.removeClass('__web-inspector-hide-shortcut__');
-          cartElem.removeClass('hidden-count');
-          cartElem.prev().removeClass('hidden-count');
+          cartElem.find('span:first-of-type').text(cart.item_count);
+          cartElem.find('span:last-of-type').text(cart.item_count + ' items');
+          
         });
       }).fail(function () {
         {% comment %} // This happens if track fails to add. --> {% endcomment %}
