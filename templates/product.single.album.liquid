@@ -95,9 +95,30 @@ SOFTWARE.
           {% capture trackTime %}{% if track.metafields.track.track_time != '' %}<span class="single-track-preview-timer">{{track.metafields.track.track_time}}</span>{% endif %}{% endcapture %}
           {% capture previewAvailable %}{% if track.metafields.track.preview == "true" %}true{% endif %}{% endcapture %}
           {% assign previewLink = track.metafields.track.preview_link %}
+          {% assign tuning = track.metafields.track.tuning | default: 'C#' %}
+          {% assign bpm = track.metafields.track.bpm | default: '120bpm' %}
+          {% assign trackURL = track.metafields.track.url | default: 'https://cdn.shopify.com/s/files/1/0587/4565/1358/files/ojio_-_ojio_-_01_time_is_a_tree.wav' %}
+
+          {% for variant in track.variants %}
+            {% if variant.available %}
+              {% if variant == track.selected_or_first_available_variant %}
+                {% assign track_variant = variant.id %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+
           {% if previewAvailable == "true" %}
-          <span class="single-album-track-play"
-                onclick="togglePlayingSingleTrack('{{ track.id }}', '{{ previewLink }}')">
+          <span 
+            class="single-album-track-play"
+            data-track-id="{{ track.id }}"
+            data-variant-id="{{ track_variant }}"
+            data-href="{{ trackURL | escape }}" 
+            data-preview-link="{{ previewLink | escape }}"
+            data-tuning="{{ tuning | escape }}"
+            data-bpm="{{ bpm | escape }}"
+            data-title="{{ product.title | escape }}"
+            data-artist="{{ product.metafields.album.artist_name | escape }}"
+          >
             <i class="material-icons">play_circle_outline</i>
           </span>
           {% endif %}
@@ -189,9 +210,27 @@ SOFTWARE.
 <script src="https://unpkg.com/wavesurfer.js"></script>
 
 <script>
+  function toHHMMSS(secs) {
+    var sec_num = parseInt(secs, 10)
+    var hours   = Math.floor(sec_num / 3600)
+    var minutes = Math.floor(sec_num / 60) % 60
+    var seconds = sec_num % 60
+
+    return [hours,minutes,seconds]
+        .map(v => v < 10 ? "0" + v : v)
+        .filter((v,i) => v !== "00" || i > 0)
+        .join(":")
+  }
 
   // Create a WaveSurfer instance
   var wavesurfer;
+  var hasLoaded = false;
+
+  // Other global vars
+  var addTrackToCart = addTrackToCart || function() {};
+  var links = [];
+  var currentTrack = 0;
+  var currentTrackData = false;
 
   // Init on DOM ready
   document.addEventListener('DOMContentLoaded', function () {
@@ -220,22 +259,72 @@ SOFTWARE.
     wavesurfer.on('play', function () {
       document.querySelector('#play').style.display = 'none';
       document.querySelector('#pause').style.display = '';
+
+      var playlistIcons = document.querySelectorAll('#playlist .single-play-icon i')
+      if(playlistIcons.length > 0) {
+        Array.prototype.forEach.call(playlistIcons, function (icon, index) {
+          icon.innerHTML = 'play_circle_outline';
+        });
+      }
+
+      var trackId = currentTrackData.trackId;
+      var playPauseInline = document.querySelector('[data-track-id="' + trackId + '"] .single-play-icon i')
+      if(playPauseInline) playPauseInline.innerHTML = 'pause_circle_outline'
     });
+
     wavesurfer.on('pause', function () {
       document.querySelector('#play').style.display = 'block';
       document.querySelector('#pause').style.display = 'none';
+
+      var playlistIcons = document.querySelectorAll('#playlist .single-play-icon i')
+      if(playlistIcons.length > 0) {
+        Array.prototype.forEach.call(playlistIcons, function (icon, index) {
+          icon.innerHTML = 'play_circle_outline';
+        });
+      }
     });
 
-    // The playlist links
-    let links = document.querySelectorAll('#playlist a');
-    let currentTrack = 0;
+    wavesurfer.on('audioprocess', function() {
+      var totalTime = wavesurfer.getDuration(),
+          currentTime = wavesurfer.getCurrentTime();
+          
+      if (wavesurfer.isPlaying()) {
+        document.querySelector('.track-time .elapsed').innerHTML = toHHMMSS(currentTime);
+        document.querySelector('.track-time .remaining').innerHTML = toHHMMSS(totalTime);
+      }
+    });
+
+    wavesurfer.on('seek', function (position) {
+      document.querySelector('.track-time .elapsed').innerHTML = toHHMMSS(wavesurfer.getCurrentTime());
+    });
+
+    // Initially set the playlist links
+    links = document.querySelectorAll('#playlist a');
+    currentTrack = 0;
+    currentTrackData = links[0].dataset;
 
     // Load a track by index and highlight the corresponding link
-    let setCurrentSong = function (index) {
-      links[currentTrack].classList.remove('active');
-      currentTrack = index;
-      links[currentTrack].classList.add('active');
-      wavesurfer.load(links[currentTrack].href);
+    function setCurrentSong(index) {
+      if(index != currentTrack || !hasLoaded) {
+        links[currentTrack].classList.remove('active');
+        
+        currentTrack = index;
+        currentTrackData = links[currentTrack].dataset;
+
+        var atcButtonIcon = document.querySelector('.single-footer-player .single-track-add-to-cart .single-track-btn')
+        atcButtonIcon.innerHTML = '<i class="material-icons single-add-track-to-cart-icon-' + currentTrackData.trackId + '">add_shopping_cart</i><span>$0.99</span>';
+  
+        links[currentTrack].classList.add('active');
+        
+        document.querySelector('.track-title').innerHTML = currentTrackData.title;
+        document.querySelector('.track-artist').innerHTML = currentTrackData.artist;
+        document.querySelector('.track-tuning').innerHTML = currentTrackData.tuning;
+        document.querySelector('.track-bpm').innerHTML = currentTrackData.bpm;
+        
+        wavesurfer.load(currentTrackData.href);
+      } else {
+        wavesurfer.playPause();
+      }
     };
 
     // Load the track on click
@@ -248,7 +337,14 @@ SOFTWARE.
 
     // Play on audio load
     wavesurfer.on('ready', function () {
-      wavesurfer.play();
+      if(hasLoaded) {
+        wavesurfer.play();
+      } else {
+        hasLoaded = true;
+      }
+
+      document.querySelector('.track-time .elapsed').innerHTML = '00:00';
+      document.querySelector('.track-time .remaining').innerHTML = toHHMMSS(wavesurfer.getDuration());
     });
 
     wavesurfer.on('error', function (e) {
@@ -262,6 +358,20 @@ SOFTWARE.
 
     // Load the first track
     setCurrentSong(currentTrack);
+
+    // prev/next watchers
+    document.querySelector('.player-controls .prev').addEventListener('click', function() {
+      setCurrentSong((currentTrack - 1) <= 0 ? (links.length - 1) : (currentTrack - 1));
+    });
+
+    document.querySelector('.player-controls .next').addEventListener('click', function() {
+      setCurrentSong((currentTrack + 1) > (links.length - 1) ? 0 : (currentTrack + 1));
+    });
+
+    //add to cart watcher
+    document.querySelector('.single-footer-player .single-track-add-to-cart').addEventListener('click', function() {
+      addTrackToCart(currentTrackData.variantId, currentTrackData.trackId);
+    });
   });
 </script>
 
@@ -276,17 +386,19 @@ SOFTWARE.
   addTrackToCart = function addTrackToCart(variantId, trackId) {
     $.post('/cart/add.json', { quantity: 1, id: variantId },
       function (variant) {
-        var elem = $('#single-add-track-to-cart-icon-' + trackId);
-        elem.replaceWith('<a href="/cart"><i class="material-icons animated pulse">check_circle</i></a>');
+        var els = $('.single-add-track-to-cart-icon-' + trackId);
+        els.each(function(i) {
+          $(this).replaceWith('<a href="/cart"><i class="material-icons animated pulse">check_circle</i></a>');
+        });
+
         $.get('/cart.json', function (cart) {
-          var cartElem = $($('span.cart-count')[0]);
+          var cartElem = $('.cart-count-bubble');
           if (!cartElem) {
             return;
           }
-          cartElem.text(cart.item_count);
-          cartElem.removeClass('__web-inspector-hide-shortcut__');
-          cartElem.removeClass('hidden-count');
-          cartElem.prev().removeClass('hidden-count');
+          cartElem.find('span:first-of-type').text(cart.item_count);
+          cartElem.find('span:last-of-type').text(cart.item_count + ' items');
+          
         });
       }).fail(function () {
         {% comment %} // This happens if track fails to add. --> {% endcomment %}

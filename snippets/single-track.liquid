@@ -31,10 +31,42 @@ SOFTWARE.
 {% capture trackTime %}{% if track.metafields.track.track_time != '' %}<span>{{track.metafields.track.track_time}}</span>{% endif %}{% endcapture %}
 {% capture previewClass %}{% if previewAvailable == "true" %} single-track-preview{% endif %}{% endcapture %}
 {% capture availableClass %}{% if trackOnSale == "true" %} single-track-available{% endif %}{% endcapture %}
+{% assign tuning = track.metafields.track.tuning | default: 'C#' %}
+{% assign bpm = track.metafields.track.bpm | default: '126bpm' %}
+{% assign trackURL = track.metafields.track.url | default: 'https://cdn.shopify.com/s/files/1/0587/4565/1358/files/ojio_-_ojio_-_01_time_is_a_tree.wav' %}
 
-<a class="single-track {{previewClass}} {{availableClass}}" href="https://cdn.shopify.com/s/files/1/0587/4565/1358/files/ojio_-_ojio_-_01_time_is_a_tree.wav" data-track-id="{{ track.id }}">
+{% for variant in track.variants %}
+  {% if variant.available %}
+    {% if variant == track.selected_or_first_available_variant %}
+      {% assign track_variant = variant.id %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
 
-  <div class="single-track-play">
+<a 
+  class="single-track {{previewClass}} {{availableClass}}" 
+  href="{{ trackURL | escape }}" 
+  data-href="{{ trackURL | escape }}" 
+  data-track-id="{{ track.id }}"
+  data-variant-id="{{ track_variant }}"
+  data-preview-link="{{ previewLink | escape }}"
+  data-tuning="{{ tuning | escape }}"
+  data-bpm="{{ bpm | escape }}"
+  data-title="{{ track.title | escape }}"
+  data-artist="{{ product.metafields.album.artist_name | escape }}"
+>
+
+  <div 
+    class="single-track-play"
+    data-href="{{ trackURL | escape }}" 
+    data-track-id="{{ track.id }}"
+    data-variant-id="{{ track_variant }}"
+    data-preview-link="{{ previewLink | escape }}"
+    data-tuning="{{ tuning | escape }}"
+    data-bpm="{{ bpm | escape }}"
+    data-title="{{ track.title | escape }}"
+    data-artist="{{ product.metafields.album.artist_name | escape }}"
+  >
     {% if trackOnSale == "true" and previewAvailable == "true" %}
       <span class="single-play-icon">
         <i class="material-icons">play_circle_outline</i>
@@ -60,18 +92,11 @@ SOFTWARE.
   {% if track.metafields.track.album_only == "true" or trackOnSale != "true" %}
     <!-- If Album Only -->
   {% else %}
-    {% for variant in track.variants %}
-      {% if variant.available %}
-        {% if variant == track.selected_or_first_available_variant %}
-          {% assign track_variant = variant.id %}
-        {% endif %}
-      {% endif %}
-    {% endfor %}
     {% if presale != "true" or trackOnSale == "true" %}
       <div class="single-track-add-to-cart">
         <div class="single-track-btn" 
              onclick="addTrackToCart({{ track_variant }}, {{ track.id }});">
-          <i class="material-icons" id="single-add-track-to-cart-icon-{{track.id}}">add_shopping_cart</i>
+          <i class="material-icons single-add-track-to-cart-icon-{{track.id}}">add_shopping_cart</i>
           <span>{{ track.price | money }}</span>
         </div>
       </div>
