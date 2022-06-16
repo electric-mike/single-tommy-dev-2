@@ -94,10 +94,9 @@ SOFTWARE.
           {% assign track = collections[collection_key].products.first %}
           {% capture trackTime %}{% if track.metafields.track.track_time != '' %}<span class="single-track-preview-timer">{{track.metafields.track.track_time}}</span>{% endif %}{% endcapture %}
           {% capture previewAvailable %}{% if track.metafields.track.preview == "true" %}true{% endif %}{% endcapture %}
-          {% assign previewLink = track.metafields.track.preview_link %}
+          {% assign previewLink = track.metafields.track.preview_link | default: 'https://cdn.shopify.com/s/files/1/0587/4565/1358/files/ojio_-_ojio_-_01_time_is_a_tree.wav' %}
           {% assign tuning = track.metafields.track.tuning | default: 'C#' %}
           {% assign bpm = track.metafields.track.bpm | default: '120bpm' %}
-          {% assign trackURL = track.metafields.track.url | default: 'https://cdn.shopify.com/s/files/1/0587/4565/1358/files/ojio_-_ojio_-_01_time_is_a_tree.wav' %}
 
           {% for variant in track.variants %}
             {% if variant.available %}
@@ -112,7 +111,7 @@ SOFTWARE.
             class="single-album-track-play"
             data-track-id="{{ track.id }}"
             data-variant-id="{{ track_variant }}"
-            data-href="{{ trackURL | escape }}" 
+            data-href="" 
             data-preview-link="{{ previewLink | escape }}"
             data-tuning="{{ tuning | escape }}"
             data-bpm="{{ bpm | escape }}"
@@ -222,18 +221,19 @@ SOFTWARE.
         .join(":")
   }
 
-  // Create a WaveSurfer instance
-  var wavesurfer;
-  var hasLoaded = false;
-
-  // Other global vars
-  var addTrackToCart = addTrackToCart || function() {};
-  var links = [];
-  var currentTrack = 0;
-  var currentTrackData = false;
-
   // Init on DOM ready
   document.addEventListener('DOMContentLoaded', function () {
+    // Create a WaveSurfer instance
+    var wavesurfer;
+    var hasLoaded = false;
+
+    // Global vars
+    var addTrackToCart = addTrackToCart || function() {};
+    var getPreviewURL = getPreviewURL || function() {};
+    var links = document.querySelectorAll('#playlist a');
+    var currentTrack = 0;
+    var currentTrackData = false;
+
     wavesurfer = WaveSurfer.create({
       container: '#waveform',
       waveColor: 'rgba(255,255,255,.25)',
@@ -246,10 +246,8 @@ SOFTWARE.
       mediaControls: 'true',
       responsive: true
     });
-  });
 
-  // Bind controls
-  document.addEventListener('DOMContentLoaded', function () {
+    // Bind controls
     let playPause = document.querySelector('#playPause');
     playPause.addEventListener('click', function () {
       wavesurfer.playPause();
@@ -298,11 +296,6 @@ SOFTWARE.
       document.querySelector('.track-time .elapsed').innerHTML = toHHMMSS(wavesurfer.getCurrentTime());
     });
 
-    // Initially set the playlist links
-    links = document.querySelectorAll('#playlist a');
-    currentTrack = 0;
-    currentTrackData = links[0].dataset;
-
     // Load a track by index and highlight the corresponding link
     function setCurrentSong(index) {
       if(index != currentTrack || !hasLoaded) {
@@ -327,12 +320,31 @@ SOFTWARE.
       }
     };
 
-    // Load the track on click
-    Array.prototype.forEach.call(links, function (link, index) {
-      link.addEventListener('click', function (e) {
-        e.preventDefault();
-        setCurrentSong(index);
-      });
+    Array.prototype.forEach.call(links, function (link, index) { 
+      if(link.dataset.previewLink !== '') {
+        // set the actual preview link
+        $.ajax({
+          url: link.dataset.previewLink,
+          dataType: 'text',
+          type: 'GET',
+          success: function(previewURL) {
+            link.dataset.href = previewURL
+  
+            link.addEventListener('click', function (e) {
+              e.preventDefault();
+              setCurrentSong(index);
+            });
+  
+            if(index == 0) {
+              // Load the first track
+              setCurrentSong(0);
+            }
+          },
+          error: function(XMLHttpRequest) {
+            console.log('Error playing track');
+          }
+        })
+      }
     });
 
     // Play on audio load
@@ -355,9 +367,6 @@ SOFTWARE.
     wavesurfer.on('finish', function () {
       setCurrentSong((currentTrack + 1) % links.length);
     });
-
-    // Load the first track
-    setCurrentSong(currentTrack);
 
     // prev/next watchers
     document.querySelector('.player-controls .prev').addEventListener('click', function() {
@@ -383,7 +392,7 @@ SOFTWARE.
   fetches the cart, and updates the cart item count.
   */
   {% endcomment %}
-  addTrackToCart = function addTrackToCart(variantId, trackId) {
+  var addTrackToCart = function addTrackToCart(variantId, trackId) {
     $.post('/cart/add.json', { quantity: 1, id: variantId },
       function (variant) {
         var els = $('.single-add-track-to-cart-icon-' + trackId);
