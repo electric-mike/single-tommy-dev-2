@@ -25,7 +25,7 @@ SOFTWARE.
 {% assign trackReleaseDate = trackReleaseDateFormatted | date: "%s" | plus: 0 %}
 {% capture trackOnSale %}{% if trackReleaseDate <= now %}true{% endif %}{% endcapture %}
 {% capture previewAvailable %}{% if track.metafields.track.preview == "true" %}true{% endif %}{% endcapture %}
-{% assign previewLink = track.metafields.track.preview_link %}
+{% assign previewLink = track.metafields.track.preview_link | default: 'https://cdn.shopify.com/s/files/1/0587/4565/1358/files/ojio_-_ojio_-_01_time_is_a_tree.wav' %}
 {% capture albumOnly %}{% if track.metafields.track.album_only == "true" %}true{% endif %}{% endcapture %}
 {% capture previewClickEvent %}{% if trackOnSale == "true" and previewAvailable == "true" %}onclick="togglePlayingTrack('{{ track.id }}', '{{ previewLink }}')"{% endif %}{% endcapture %}
 {% capture trackTime %}{% if track.metafields.track.track_time != '' %}<span>{{track.metafields.track.track_time}}</span>{% endif %}{% endcapture %}
@@ -33,7 +33,6 @@ SOFTWARE.
 {% capture availableClass %}{% if trackOnSale == "true" %} single-track-available{% endif %}{% endcapture %}
 {% assign tuning = track.metafields.track.tuning | default: 'C#' %}
 {% assign bpm = track.metafields.track.bpm | default: '126bpm' %}
-{% assign trackURL = track.metafields.track.url | default: 'https://cdn.shopify.com/s/files/1/0587/4565/1358/files/ojio_-_ojio_-_01_time_is_a_tree.wav' %}
 
 {% for variant in track.variants %}
   {% if variant.available %}
@@ -45,26 +44,26 @@ SOFTWARE.
 
 <a 
   class="single-track {{previewClass}} {{availableClass}}" 
-  href="{{ trackURL | escape }}" 
-  data-href="{{ trackURL | escape }}" 
+  href="" 
   data-track-id="{{ track.id }}"
   data-variant-id="{{ track_variant }}"
+  data-href="" 
   data-preview-link="{{ previewLink | escape }}"
   data-tuning="{{ tuning | escape }}"
   data-bpm="{{ bpm | escape }}"
-  data-title="{{ track.title | escape }}"
+  data-title="{{ product.title | escape }}"
   data-artist="{{ product.metafields.album.artist_name | escape }}"
 >
 
   <div 
     class="single-track-play"
-    data-href="{{ trackURL | escape }}" 
+    data-href="" 
     data-track-id="{{ track.id }}"
     data-variant-id="{{ track_variant }}"
     data-preview-link="{{ previewLink | escape }}"
     data-tuning="{{ tuning | escape }}"
     data-bpm="{{ bpm | escape }}"
-    data-title="{{ track.title | escape }}"
+    data-title="{{ product.title | escape }}"
     data-artist="{{ product.metafields.album.artist_name | escape }}"
   >
     {% if trackOnSale == "true" and previewAvailable == "true" %}
