@@ -95,7 +95,7 @@ SOFTWARE.
     {% if presale != "true" or trackOnSale == "true" %}
       <div class="single-track-add-to-cart">
         <div class="single-track-btn" 
-             onclick="addTrackToCart({{ track_variant }}, {{ track.id }});">
+             onclick="addTrackToCart({{ track_variant }}, {{ track.id }}, event);">
           <i class="material-icons single-add-track-to-cart-icon-{{track.id}}">add_shopping_cart</i>
           <span>{{ track.price | money }}</span>
         </div>

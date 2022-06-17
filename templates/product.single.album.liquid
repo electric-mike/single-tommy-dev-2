@@ -209,6 +209,31 @@ SOFTWARE.
 <script src="https://unpkg.com/wavesurfer.js"></script>
 
 <script>
+  function addTrackToCart(variantId, trackId, e) {
+    if(e) { e.preventDefault(); e.stopPropagation(); }
+
+    $.post('/cart/add.json', { quantity: 1, id: variantId },
+      function (variant) {
+        var els = $('.single-add-track-to-cart-icon-' + trackId);
+        els.each(function(i) {
+          $(this).replaceWith('<a href="/cart"><i class="material-icons animated pulse">check_circle</i></a>');
+        });
+
+        $.get('/cart.json', function (cart) {
+          var cartElem = $('.cart-count-bubble');
+          if (!cartElem) {
+            return;
+          }
+          cartElem.find('span:first-of-type').text(cart.item_count);
+          cartElem.find('span:last-of-type').text(cart.item_count + ' items');
+          
+        });
+      }).fail(function () {
+        {% comment %} // This happens if track fails to add. --> {% endcomment %}
+        alert('Failed to add track to cart!');
+      });
+  }
+
   function toHHMMSS(secs) {
     var sec_num = parseInt(secs, 10)
     var hours   = Math.floor(sec_num / 3600)
@@ -228,7 +253,6 @@ SOFTWARE.
     var hasLoaded = false;
 
     // Global vars
-    var addTrackToCart = addTrackToCart || function() {};
     var getPreviewURL = getPreviewURL || function() {};
     var links = document.querySelectorAll('#playlist a');
     var currentTrack = 0;
@@ -382,38 +406,6 @@ SOFTWARE.
       addTrackToCart(currentTrackData.variantId, currentTrackData.trackId);
     });
   });
-</script>
-
-<!-- Single AJAX Scripts -->
-<script>
-  {% comment %}
-  /*
-  This adds the provided track variant to the shopping cart,
-  fetches the cart, and updates the cart item count.
-  */
-  {% endcomment %}
-  var addTrackToCart = function addTrackToCart(variantId, trackId) {
-    $.post('/cart/add.json', { quantity: 1, id: variantId },
-      function (variant) {
-        var els = $('.single-add-track-to-cart-icon-' + trackId);
-        els.each(function(i) {
-          $(this).replaceWith('<a href="/cart"><i class="material-icons animated pulse">check_circle</i></a>');
-        });
-
-        $.get('/cart.json', function (cart) {
-          var cartElem = $('.cart-count-bubble');
-          if (!cartElem) {
-            return;
-          }
-          cartElem.find('span:first-of-type').text(cart.item_count);
-          cartElem.find('span:last-of-type').text(cart.item_count + ' items');
-          
-        });
-      }).fail(function () {
-        {% comment %} // This happens if track fails to add. --> {% endcomment %}
-        alert('Failed to add track to cart!');
-      });
-  };
 </script>
 
 {% include 'single-ajaxify-album' %}
