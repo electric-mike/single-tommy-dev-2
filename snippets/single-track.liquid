@@ -51,7 +51,7 @@ SOFTWARE.
   data-preview-link="{{ previewLink | escape }}"
   data-tuning="{{ tuning | escape }}"
   data-bpm="{{ bpm | escape }}"
-  data-title="{{ product.title | escape }}"
+  data-title="{{ track.title | escape }}"
   data-artist="{{ product.metafields.album.artist_name | escape }}"
 >
 
@@ -63,7 +63,7 @@ SOFTWARE.
     data-preview-link="{{ previewLink | escape }}"
     data-tuning="{{ tuning | escape }}"
     data-bpm="{{ bpm | escape }}"
-    data-title="{{ product.title | escape }}"
+    data-title="{{ track.title | escape }}"
     data-artist="{{ product.metafields.album.artist_name | escape }}"
   >
     {% if trackOnSale == "true" and previewAvailable == "true" %}
