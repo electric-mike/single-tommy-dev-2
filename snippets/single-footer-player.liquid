@@ -44,6 +44,8 @@
 
   .thumbnail img {
     border-radius: 4px;
+    height: 60px;
+    width: 60px;
   }
 
   .track-info {
@@ -65,11 +67,11 @@
     font-size: .75em;
   }
 
-  .track-time {
-    margin-bottom: .75em;
+  .track-meta {
+    margin-top: .75em;
   }
 
-  .remaining {
+  .divider, .remaining {
     opacity: .5;
     font-size: .75em
   }
@@ -96,7 +98,7 @@
     cursor: pointer;
   }
 
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 750px) {
     body {
       padding-bottom: 150px;
     }
@@ -120,6 +122,10 @@
       width: 100%;
     }
 
+    .thumbnail img {
+      height: 40px;
+      width: 40px;
+    }
 
   }
 </style>
@@ -128,9 +134,7 @@
   <div class="col col-1_4"
        id="main_info">
     <div class="thumbnail">
-      <img src="//cdn.shopify.com/s/files/1/0587/4565/1358/products/4e3bedda-53fd-463e-9e97-b03d8321a9525451984217093840011-LARGE_98fafc39-8421-4cd9-90f0-045a1e788c1c_grande.jpg"
-           height="60"
-           width="60" />
+      <img src="{{ product.featured_image.src | img_url: '120x120' }}"/>
     </div>
     <div class="track-info">
       <span class="track-title">Track Title</span>
@@ -147,9 +151,10 @@
     <div class="track-details small">
       <div class="track-time">
         <span class="elapsed">00:00</span>
-        <span class="remaining">/ 00:00</span>
+        <span class="divider">/ </span>
+        <span class="remaining">00:00</span>
       </div>
-      <div class="track-meta">
+      <div class="track-meta" style="display:none;">
         <span class="track-tuning">C#</span>
         <span style="opacity: .25;">•</span>
         <span class="track-bpm">126bpm</span>
