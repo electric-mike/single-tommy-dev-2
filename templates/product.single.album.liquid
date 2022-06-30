@@ -117,6 +117,7 @@ SOFTWARE.
             data-bpm="{{ bpm | escape }}"
             data-title="{% if track.metafields.track.featured_artist_names %}{{ track.title }} (feat. {{track.metafields.track.featured_artist_names}}){% else %}{{ track.title | escape }}{% endif %}"
             data-artist="{{ product.metafields.album.artist_name | escape }}"
+            data-price="{{ track.price | money }}"
           >
             <i class="material-icons">play_circle_outline</i>
           </span>
@@ -279,8 +280,21 @@ var singleAlbumPlayer = {
       self.setCurrentSong((self.currentTrack + 1) > (self.links.length - 1) ? 0 : (self.currentTrack + 1));
     });
 
+    // individual product atc
+    var atcs = document.querySelectorAll('.single-tracklist .single-track-add-to-cart')
+    atcs.forEach(function(atc) {
+      atc.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+  
+        var variantId = atc.dataset.variantId;
+        var trackId = atc.dataset.trackId;
+        self.addTrackToCart(variantId, trackId);
+      });
+    });
+
     //add to cart watcher
-    document.querySelector('.single-footer-player .single-track-add-to-cart').addEventListener('click', function() {
+    document.querySelector('.single-footer-add-to-cart').addEventListener('click', function() {
       self.addTrackToCart(self.currentTrackData.variantId, self.currentTrackData.trackId);
     });
   },
@@ -371,6 +385,7 @@ var singleAlbumPlayer = {
       document.querySelector('.track-artist').innerHTML = this.currentTrackData.artist;
       document.querySelector('.track-tuning').innerHTML = this.currentTrackData.tuning;
       document.querySelector('.track-bpm').innerHTML = this.currentTrackData.bpm;
+      document.querySelector('.single-footer-add-to-cart span').innerHTML = this.currentTrackData.price;
       
       this.wavesurfer.load(this.currentTrackData.href);
     } else {

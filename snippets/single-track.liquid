@@ -53,6 +53,7 @@ SOFTWARE.
   data-bpm="{{ bpm | escape }}"
   data-title="{% if track.metafields.track.featured_artist_names %}{{ track.title }} (feat. {{track.metafields.track.featured_artist_names}}){% else %}{{ track.title | escape }}{% endif %}"
   data-artist="{{ product.metafields.album.artist_name | escape }}"
+  data-price="{{ track.price | money }}"
 >
 
   <div 
@@ -65,6 +66,7 @@ SOFTWARE.
     data-bpm="{{ bpm | escape }}"
     data-title="{% if track.metafields.track.featured_artist_names %}{{ track.title }} (feat. {{track.metafields.track.featured_artist_names}}){% else %}{{ track.title | escape }}{% endif %}"
     data-artist="{{ product.metafields.album.artist_name | escape }}"
+    data-price="{{ track.price | money }}"
   >
     {% if trackOnSale == "true" and previewAvailable == "true" %}
       <span class="single-play-icon">
@@ -92,9 +94,12 @@ SOFTWARE.
     <!-- If Album Only -->
   {% else %}
     {% if presale != "true" or trackOnSale == "true" %}
-      <div class="single-track-add-to-cart">
-        <div class="single-track-btn" 
-             onclick="addTrackToCart({{ track_variant }}, {{ track.id }}, event);">
+      <div 
+        class="single-track-add-to-cart" 
+        data-variant-id="{{ track_variant }}"
+        data-track-id="{{ track.id }}"
+      >
+        <div class="single-track-btn">
           <i class="material-icons single-add-track-to-cart-icon-{{track.id}}">add_shopping_cart</i>
           <span>{{ track.price | money }}</span>
         </div>
